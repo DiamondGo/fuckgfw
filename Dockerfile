@@ -27,7 +27,7 @@ RUN pip3 install shadowsocks
 RUN apt-get install wget -y
 RUN wget https://github.com/xtaci/kcptun/releases -O - 2>/dev/null | grep kcptun-linux-amd64- | grep "a href" | sort | tail -1 | awk -F '"' '{print $2}' | { read uri; wget "https://github.com${uri}" -O /tmp/kcptun.tar.gz -c -t 0; }
 RUN mkdir /usr/local/kcptun -p
-RUN tar /tmp/kcptun.tar.gz -C /usr/local/kcptun
+RUN tar xzvf /tmp/kcptun.tar.gz -C /usr/local/kcptun
 
 # ADD https://github.com/xtaci/kcptun/releases/download/v20170525/kcptun-linux-amd64-20170525.tar.gz /tmp/kcptun-linux-amd64-20170525.tar.gz
 
