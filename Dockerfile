@@ -30,22 +30,26 @@ RUN mkdir /usr/local/kcptun -p
 RUN tar xzvf /tmp/kcptun.tar.gz -C /usr/local/kcptun
 RUN chown 0:0 /usr/local/kcptun/*
 
-# add script
-RUN touch /usr/local/bin/fuckgfw_client.sh
-
-RUN echo "#!/bin/bash" >> /usr/local/bin/fuckgfw_client.sh
-RUN echo "if [ $# -ne 3 ];" >> /usr/local/bin/fuckgfw_client.sh
-RUN echo "    then echo usage: $0 remote_kcptun(ip:port) local_socks_port password" >> /usr/local/bin/fuckgfw_client.sh
-RUN echo "fi" >> /usr/local/bin/fuckgfw_client.sh
-RUN echo "nohup /usr/local/bin/client_linux_amd64 -r $1 -l :9527 -mode fast2 > /tmp/kcp.log 2>&1 &" >> /usr/local/bin/fuckgfw_client.sh
-RUN echo "sleep 3" >> /usr/local/bin/fuckgfw_client.sh
-RUN echo "nohup /usr/local/bin/sslocal -s 127.0.0.1 -p 9527 -l $2 -m aes-256-cfb -k $3 --pid-file /tmp/ss.pid > /tmp/ss.log 2>&1 &" >> /usr/local/bin/fuckgfw_client.sh
 
 
-RUN chmod +x /usr/local/bin/fuckgfw_client.sh
 
-RUN apt-get purge --auto-remove -y wget
-RUN rm -rf /tmp/kcp*
+#   # add script
+#   RUN touch /usr/local/bin/fuckgfw_client.sh
+#   
+#   RUN echo "#!/bin/bash" >> /usr/local/bin/fuckgfw_client.sh
+#   RUN echo "if [ \$# -ne 3 ]; then" >> /usr/local/bin/fuckgfw_client.sh
+#   RUN echo "    echo usage: \$0 remote_kcptun local_socks_port password" >> /usr/local/bin/fuckgfw_client.sh
+#   RUN echo "    exit" >> /usr/local/bin/fuckgfw_client.sh
+#   RUN echo "fi" >> /usr/local/bin/fuckgfw_client.sh
+#   RUN echo "nohup /usr/local/bin/client_linux_amd64 -r \$1 -l :9527 -mode fast2 > /tmp/kcp.log 2>&1 &" >> /usr/local/bin/fuckgfw_client.sh
+#   RUN echo "sleep 3" >> /usr/local/bin/fuckgfw_client.sh
+#   RUN echo "nohup /usr/local/bin/sslocal -s 127.0.0.1 -p 9527 -l \$2 -m aes-256-cfb -k \$3 --pid-file /tmp/ss.pid > /tmp/ss.log 2>&1 &" >> /usr/local/bin/fuckgfw_client.sh
+#   
+#   
+#   RUN chmod +x /usr/local/bin/fuckgfw_client.sh
+#   
+#   RUN apt-get purge --auto-remove -y wget
+#   RUN rm -rf /tmp/kcp*
 
 
 
