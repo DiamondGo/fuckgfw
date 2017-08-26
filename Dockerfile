@@ -1,22 +1,3 @@
-# Run Chrome in a container
-#
-# docker run -it \
-#	--net host \ # may as well YOLO
-#	--cpuset-cpus 0 \ # control the cpu
-#	--memory 512mb \ # max memory it can use
-#	-v /tmp/.X11-unix:/tmp/.X11-unix \ # mount the X11 socket
-#	-e DISPLAY=unix$DISPLAY \
-#	-v $HOME/Downloads:/home/chrome/Downloads \
-#	-v $HOME/.config/google-chrome/:/data \ # if you want to save state
-#	--security-opt seccomp=$HOME/chrome.json \
-#	--device /dev/snd \ # so we have sound
-#	-v /dev/shm:/dev/shm \
-#	--name chrome \
-#	jess/chrome
-#
-# You will want the custom seccomp profile:
-# 	wget https://raw.githubusercontent.com/jfrazelle/dotfiles/master/etc/docker/seccomp/chrome.json -O ~/chrome.json
-
 # Base docker image
 FROM ubuntu:16.04
 # LABEL maintainer "Kenneth Tse <fuckgfw@linux.com>"
@@ -30,67 +11,31 @@ RUN mkdir /usr/local/kcptun -p
 RUN tar xzvf /tmp/kcptun.tar.gz -C /usr/local/kcptun
 RUN chown 0:0 /usr/local/kcptun/*
 
+# start script
+ARG CLIENT_SCRIPT=/usr/local/bin/fuckgfw_client.sh
+RUN touch $CLIENT_SCRIPT
 
+RUN echo "#!/bin/bash" >> $CLIENT_SCRIPT
+# #1:kcp_server #2:kcp_port kcp_#3:local_port #4:kcp_mode
+# #5:ss_mode #6:ss_password #7:proxy_port
+RUN echo "nohup /usr/local/kcptun/client_linux_amd64 -r \$1:\$2 -l :\$3 -mode \$4 > /tmp/kcp.log 2>&1 &" >> $CLIENT_SCRIPT
+RUN echo "nohup /usr/local/bin/sslocal -s 127.0.0.1 -p \$3 -b 0.0.0.0 -l \$7 -m \$5 -k \$6 --pid-file /tmp/ss.pid > /tmp/ss.log 2>&1 &" >> $CLIENT_SCRIPT
+RUN echo "while true; do sleep 3600; done" >> $CLIENT_SCRIPT
+RUN chmod +x $CLIENT_SCRIPT
 
+ENV REMOTE_SERVER 0.0.0.0
+ENV REMOTE_PORT 0.0.0.0
+ENV INTERNAL_PORT 9527
+ENV KCP_MODE fast2
+ENV SS_MODE aes-256-cfb
+ENV SS_PASSWORD password
+ENV PROXY_PORT 1080
 
-#   # add script
-#   RUN touch /usr/local/bin/fuckgfw_client.sh
-#   
-#   RUN echo "#!/bin/bash" >> /usr/local/bin/fuckgfw_client.sh
-#   RUN echo "if [ \$# -ne 3 ]; then" >> /usr/local/bin/fuckgfw_client.sh
-#   RUN echo "    echo usage: \$0 remote_kcptun local_socks_port password" >> /usr/local/bin/fuckgfw_client.sh
-#   RUN echo "    exit" >> /usr/local/bin/fuckgfw_client.sh
-#   RUN echo "fi" >> /usr/local/bin/fuckgfw_client.sh
-#   RUN echo "nohup /usr/local/bin/client_linux_amd64 -r \$1 -l :9527 -mode fast2 > /tmp/kcp.log 2>&1 &" >> /usr/local/bin/fuckgfw_client.sh
-#   RUN echo "sleep 3" >> /usr/local/bin/fuckgfw_client.sh
-#   RUN echo "nohup /usr/local/bin/sslocal -s 127.0.0.1 -p 9527 -l \$2 -m aes-256-cfb -k \$3 --pid-file /tmp/ss.pid > /tmp/ss.log 2>&1 &" >> /usr/local/bin/fuckgfw_client.sh
-#   
-#   
-#   RUN chmod +x /usr/local/bin/fuckgfw_client.sh
-#   
-#   RUN apt-get purge --auto-remove -y wget
-#   RUN rm -rf /tmp/kcp*
+RUN apt-get purge --auto-remove -y wget
+RUN rm -rf /tmp/kcp* /var/cache/apk/*
 
+EXPOSE $PROXY_PORT
 
+CMD /usr/local/bin/fuckgfw_client.sh $REMOTE_SERVER $REMOTE_PORT $INTERNAL_PORT $KCP_MODE $SS_MODE $SS_PASSWORD $PROXY_PORT
 
-# ADD https://github.com/xtaci/kcptun/releases/download/v20170525/kcptun-linux-amd64-20170525.tar.gz /tmp/kcptun-linux-amd64-20170525.tar.gz
-
-# ADD https://dl.google.com/linux/direct/google-talkplugin_current_amd64.deb /src/google-talkplugin_current_amd64.deb
-# 
-# # Install Chrome
-# RUN apt-get update && apt-get install -y \
-# 	apt-transport-https \
-# 	ca-certificates \
-# 	curl \
-# 	gnupg \
-# 	hicolor-icon-theme \
-# 	libgl1-mesa-dri \
-# 	libgl1-mesa-glx \
-# 	libpango1.0-0 \
-# 	libpulse0 \
-# 	libv4l-0 \
-# 	fonts-symbola \
-# 	--no-install-recommends \
-# 	&& curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-# 	&& echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list \
-# 	&& apt-get update && apt-get install -y \
-# 	google-chrome-stable \
-# 	--no-install-recommends \
-# 	&& dpkg -i '/src/google-talkplugin_current_amd64.deb' \
-# 	&& apt-get purge --auto-remove -y curl \
-# 	&& rm -rf /var/lib/apt/lists/* \
-# 	&& rm -rf /src/*.deb
-# 
-# # Add chrome user
-# RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
-#     && mkdir -p /home/chrome/Downloads && chown -R chrome:chrome /home/chrome
-# 
-# COPY local.conf /etc/fonts/local.conf
-# 
-# # Run Chrome as non privileged user
-# USER chrome
-# 
-# # Autorun chrome
-# ENTRYPOINT [ "google-chrome" ]
-# CMD [ "--user-data-dir=/data" ]
 
