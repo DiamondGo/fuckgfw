@@ -48,8 +48,6 @@ ENV PROXY_PORT 1080
 RUN apt-get purge --auto-remove -y wget
 RUN rm -rf /tmp/kcp* /var/cache/apk/*
 
-EXPOSE $PROXY_PORT
-
 CMD /usr/local/bin/fuckgfw_client.sh $REMOTE_SERVER $KCP_LISTEN_PORT $SS_LISTEN_PORT $KCP_MODE $SS_MODE $SS_PASSWORD $PROXY_PORT
 
 
